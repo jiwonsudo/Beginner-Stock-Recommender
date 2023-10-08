@@ -1,68 +1,70 @@
 from datetime import datetime, timedelta
+
+import pandas
 from pykrx import stock
 import pandas as pd
-import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from mpl_finance import candlestick2_ohlc
+import mplfinance as mpf
 
-market = 'KOSPI'  # KOSPI, KOSDAQ, KONEX
+market = 'KOSPI'  # KOSPI, KOSDAQ, KONEX 중 타깃 시장 지정 (StockInfo 클래스의 get_tickers 메소드에서 사용)
 
-class StockInfoHandler:
-    def get_current_tickers(self):
+class StockInfo:
+    def __init__(self):
+        self.tickers: list = self.__get_tickers()
+        self.firms: list = self.__get_firms(self.tickers)
+
+    def __get_tickers(self):
         """
-        :returns: list of tickers, in type of list
+        조회 시점의 market 티커(종목코드)를 가져옵니다.
+        :return: 조회 시점의 market 티커 리스트
         """
         today_ymd = datetime.today().strftime('%Y%m%d')
         tickers: list = stock.get_market_ticker_list(today_ymd, market=market)
         return tickers
 
-    def get_firm_name(self, ticker: str):
+    def __get_firms(self, tickers: list):
         """
-        :param ticker: ticker (stock code) for searching a firm
-        :return: firm_name
+        인자로 받은 종목 코드 리스트를 기반으로 기업명을 가져옵니다.
+        :param tickers: 티커 리스트
+        :return: 티커로 검색된 기업 리스트
         """
-        firm_name : str = stock.get_market_ticker_name(ticker)
-        return firm_name
+        firm_name_list: list = []
+        for ticker in tickers:
+            firm_name_list.append(stock.get_market_ticker_name(ticker))
+        return firm_name_list
 
-    def get_df_current_firms(self):
+    def __search_firm(self, keyword: str):
         """
-        :return: list of current firm names, by using self.get_current_ticker and self.get_firm_name
+        검색어를 파라미터를 받아 검색어가 포함된 회사명을 리스트로 반환합니다.
+        :param keyword: self.firms에서 검색하고자 하는 기업명
+        :return: keyword가 포함된 회사명 리스트; 검색 결과가 없을 경우 False 반환
         """
-        current_tickers = self.get_current_tickers()
-        current_firm_names : list = [self.get_firm_name(ticker) for ticker in current_tickers]
+        matching_results: list = [firm for firm in self.firms if keyword in firm]
+        if len(matching_results) > 0:
+            return matching_results
+        else:
+            return False
 
-        data = {
-            'firm_name': current_firm_names
-        }
+    def get_user_input(self):
+        while True:
+            temp_firms: list = []
+            keyword_to_search: str = input('검색하고자 하는 기업의 이름을 입력하세요: ')
+            if self.__search_firm(keyword_to_search):
+                temp_firms = self.__search_firm(keyword_to_search)
 
-        df_current_firms : pd.DataFrame = pd.DataFrame(data, index = current_tickers)
-        return df_current_firms
 
-    def get_firm_ohlcv(self, ticker: str, before_date: str, period_unit: str, frequency: str = 'd'):
-        """
-        :param ticker: firm's ticker to get data
-        :param before_date: previous period to search from today
-        :param period_unit: units from today to previous period (choose between 'd'(day) and 'w'(week))
-        :param frequency: optional(default value: d(day))
-        :return: ohclv(open, high, close, low, volume) data of firm; indicated by ticker
-        """
-        if period_unit == 'd':
-            start_date = (datetime.now() - timedelta(days=int(before_date))).strftime('%Y%m%d')
-        elif period_unit == 'w':
-            start_date = (datetime.now() - timedelta(days=int(before_date))).strftime('%Y%m%d')
-        today_ymd = datetime.now().strftime('%Y%m%d')
-        end_date = today_ymd
-        firm_ohlcv = stock.get_market_ohlcv(start_date, end_date, ticker, frequency)  # frequency: y, m, d
-        return firm_ohlcv
 
-    def search_firm_name_by_keyword(self, keyword: str):
-        df_current_firms : pd.DataFrame = self.get_df_current_firms()
-        searched_results: list = list(df_current_firms['firm_name'].str.contains(keyword))
-        return searched_results
 
-    def get_market_
 
-class DataVisualizer:
-    pass
+
+
+
+
+
+
+
+
+
