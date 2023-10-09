@@ -162,7 +162,7 @@ class DataVisualizer(StockInfo):
         plt.xticks(rotation=60)
         plt.tight_layout()
         plt.show()
-
+        print(f'{stock.get_market_ticker_name(ticker)}의 {date_list[0]}~{date_list[-1]}간 주가 정보가 표시되었습니다.')
 
 test = StockInfo()
 ticker, ohlcv_data = test.get_user_input()
