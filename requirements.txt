@@ -9,7 +9,6 @@ idna==3.4
 kiwisolver==1.4.5
 matplotlib==3.7.3
 mpl-finance==0.10.1
-mplfinance==0.12.10b0
 multipledispatch==1.0.0
 numpy==1.25.2
 packaging==23.1
