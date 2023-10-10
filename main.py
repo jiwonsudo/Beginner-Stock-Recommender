@@ -1,6 +1,5 @@
 from datetime import datetime, timedelta
 
-import pandas
 from pykrx import stock
 import pandas as pd
 import matplotlib
