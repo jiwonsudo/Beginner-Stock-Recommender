@@ -130,7 +130,6 @@ class DataVisualizer:
 class StockRecommender(StockInfo, DataVisualizer):
     def __init__(self):
         super().__init__()
-        self.stock = StockInfo()
         self.ticker, self.ohlcv_data = self.__get_user_input()
         self.__show_stock_graph()
         self.__show_fundamental()
@@ -188,7 +187,7 @@ class StockRecommender(StockInfo, DataVisualizer):
         print(f'{stock.get_market_ticker_name(self.ticker)}의 {start_date}~{end_date}간 주가 정보가 표시되었습니다.')
 
     def __show_fundamental(self):
-        print(f'{stock.get_market_ticker_name(self.ticker)}의 최근 영업일자 DIV/BPS/PER/EPS/PBR 조회정보는 아래와 같습니다.')
+        print(f'{stock.get_market_ticker_name(self.ticker)}의 최근 영업일자 BPS/PER/PBR/EPS/DIV/DPS 조회정보는 아래와 같습니다.')
         print(super()._get_ticker_fundamental(self.ticker, str(self.ohlcv_data.index.tolist()[-1])))
 
 

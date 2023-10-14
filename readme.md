@@ -28,6 +28,10 @@ __함수 설명을 모두 DocString으로 주석화하여, 코드를 통해 쉽�
 
 <img src="./image/end.png">
 
+6. (Updated) 추가로 유저가 입력한 기업명의 최근 영업일자에 평가된 BPS, PER, PBR, EPS, DIV, DPS 정보가 표시됩니다. 투자 적절성 판단에 사용할 수 있습니다.
+
+<img src="./image/fundamentals.png">
+
 ## 개발 환경 세팅
 다음 명령어를 통해 requirements.txt에 명시된 사용 라이브러리를 한번에 설치할 수 있습니다.
 
