@@ -9,6 +9,7 @@ from mpl_finance import candlestick2_ohlc
 
 market = 'KOSPI'  # KOSPI, KOSDAQ, KONEX 중 타깃 시장 지정 (StockInfo 클래스의 get_tickers 메소드에서 사용)
 
+
 class StockInfo:
     def __init__(self):
         print('프로그램 구동에 필요한 주식 정보를 불러오는 중입니다... 잠시만 기다려 주세요!')
@@ -41,7 +42,7 @@ class StockInfo:
 
         return firm_names_df
 
-    def __search_firm(self, keyword: str):
+    def _search_firm(self, keyword: str):
         """
         검색어를 파라미터로 받아 검색어가 포함된 회사의 티커를 리스트로 반환합니다.
         :param keyword: self.firms에서 검색하고자 하는 기업명
@@ -53,7 +54,7 @@ class StockInfo:
         else:
             return False
 
-    def __get_firm_ohlcv(self, target_firm_ticker, before_date):
+    def _get_firm_ohlcv(self, target_firm_ticker, before_date):
         """
         기업의 티커, 기간 전일을 파라미터로 받아 해당 기간 해당 기업의 ohlcv(open, high, low, close, value = 시작가, 고가, 저가, 종가, 거래량) 데이터를 DataFrame으로 반환합니다.
         :param target_firm_ticker: ohlcv 데이터를 조회할 기업의 티커
@@ -65,55 +66,18 @@ class StockInfo:
         target_firm_ohlcv: pd.DataFrame = stock.get_market_ohlcv(start_date, today_date, target_firm_ticker)
         return target_firm_ohlcv
 
-    def get_user_input(self):
+    def _get_ticker_fundamental(self, target_firm_ticker, date):
         """
-        사용자의 입력을 받고, self.__search_firm 함수를 이용해 사용자가 검색을 원하는 하나의 기업의 티커와 주식 정보 데이터프레임을 반환합니다.
-        :return: (사용자의 입력 중 최종적으로 선택한, 검색하고자 하는 기업의 티커), (self.__get_firm_ohlcv를 통해 얻은 before_date~오늘 간의 ohlcv 데이터프레임)
+        특정 종목의 티커를 이용, 특정 종목에 대해 조회 당일의 DIV/BPS/PER/EPS/PBR를 조회, 해당 정보가 담긴 데이터프레임을 반환합니다.
+        :param target_firm_ticker: fundamental을 조회할 기업의 티커
+        :return: 입력된 티커에 대해 조회한 DIV/BPS/PER/EPS/PBR 데이터가 담긴 데이터프레임
         """
-        while True:
-            keyword_to_search: str = input('검색하고자 하는 기업의 이름을 입력하세요: ')
-            temp_firms_tickers = self.__search_firm(keyword_to_search)
-            if temp_firms_tickers:  # 검색 결과 존재시
-                while True:
-                    temp_firms_names: list = [stock.get_market_ticker_name(ticker) for ticker in temp_firms_tickers]
+        target_firm_fundamental: pd.DataFrame = stock.get_market_fundamental(date, date, target_firm_ticker)
+        return target_firm_fundamental
 
-                    if len(temp_firms_tickers) == 1:
-                        break
 
-                    # 정확히 일치하는 문자열이 있다면, 검색 결과 포함 확인 전에 while문 탈출
-                    is_exact_match = False
-                    for firm_name in temp_firms_names:
-                        if keyword_to_search == firm_name:
-                            is_exact_match = True
-                            break
-                    if is_exact_match: break
-
-                    # 정확히 일치하는 문자열이 없을 경우 검색 결과들을 표시
-                    print('검색 결과: ', *temp_firms_names)
-                    keyword_to_search = input('검색 결과가 많습니다. 검색 결과 중 하나의 키워드를 입력하세요: ')
-
-                    # 검색 결과에 입력 문자열이 포함되는지 확인 후 맞다면 재검색
-                    if keyword_to_search in temp_firms_names:
-                        temp_firms_tickers = self.__search_firm(keyword_to_search)
-                        if len(temp_firms_tickers) == 1:
-                            break
-                    else:
-                        print('검색 결과 중 하나의 기업명을 입력해 주세요.')
-                print(f'{stock.get_market_ticker_name(temp_firms_tickers[0])}의 주가정보를 조회합니다.')
-                while True:
-                    date_input = input('조회하려는 기간의 날수(일 단위)를 입력하세요(ex: 30): ')
-                    if date_input.isdigit():
-                        before_date = int(date_input)
-                        break
-                    else:
-                        print('잘못된 입력입니다. 다시 입력해 주세요.')
-                return (temp_firms_tickers[0], self.__get_firm_ohlcv(temp_firms_tickers[0], before_date)) # 기업 티커, 주식정보 데이터프레임을 묶은 튜플
-            else:
-                print('검색 결과가 없습니다. 다시 입력해 주세요.')
-
-class DataVisualizer(StockInfo):
-    @staticmethod
-    def draw_ohlcv(ticker: str, ohlcv_df: pd.DataFrame):
+class DataVisualizer:
+    def _draw_ohlcv(self, ticker: str, ohlcv_df: pd.DataFrame):
         """
         기업의 ohlcv 데이터가 담긴 데이터프레임을 이용해 mpl_finance 라이브러리를 이용, candle stick chart(봉차트)를 그립니다.
         :param ticker: 차트를 그릴 기업의 티커 - 단, 그래프 제목 표시에만 사용됨 (데이터와 연관 x)
@@ -161,10 +125,71 @@ class DataVisualizer(StockInfo):
         plt.xticks(rotation=60)
         plt.tight_layout()
         plt.show()
-        print(f'{stock.get_market_ticker_name(ticker)}의 {date_list[0]}~{date_list[-1]}간 주가 정보가 표시되었습니다.')
-
-test = StockInfo()
-ticker, ohlcv_data = test.get_user_input()
-DataVisualizer.draw_ohlcv(ticker, ohlcv_data)
 
 
+class StockRecommender(StockInfo, DataVisualizer):
+    def __init__(self):
+        super().__init__()
+        self.stock = StockInfo()
+        self.ticker, self.ohlcv_data = self.__get_user_input()
+        self.__show_stock_graph()
+        self.__show_fundamental()
+
+    def __get_user_input(self):
+        """
+        사용자의 입력을 받고, self.__search_firm 함수를 이용해 사용자가 검색을 원하는 하나의 기업의 티커와 주식 정보 데이터프레임을 반환합니다.
+        :return: (사용자의 입력 중 최종적으로 선택한, 검색하고자 하는 기업의 티커), (self.__get_firm_ohlcv를 통해 얻은 before_date~오늘 간의 ohlcv 데이터프레임)
+        """
+        while True:
+            keyword_to_search: str = input('검색하고자 하는 기업의 이름을 입력하세요: ')
+            temp_firms_tickers = super()._search_firm(keyword_to_search)
+            if temp_firms_tickers:  # 검색 결과 존재시
+                while True:
+                    temp_firms_names: list = [stock.get_market_ticker_name(ticker) for ticker in temp_firms_tickers]
+
+                    if len(temp_firms_tickers) == 1:
+                        break
+
+                    # 정확히 일치하는 문자열이 있다면, 검색 결과 포함 확인 전에 while문 탈출
+                    is_exact_match = False
+                    for firm_name in temp_firms_names:
+                        if keyword_to_search == firm_name:
+                            is_exact_match = True
+                            break
+                    if is_exact_match: break
+
+                    # 정확히 일치하는 문자열이 없을 경우 검색 결과들을 표시
+                    print('검색 결과: ', *temp_firms_names)
+                    keyword_to_search = input('검색 결과가 많습니다. 검색 결과 중 하나의 키워드를 입력하세요: ')
+
+                    # 검색 결과에 입력 문자열이 포함되는지 확인 후 맞다면 재검색
+                    if keyword_to_search in temp_firms_names:
+                        temp_firms_tickers = super()._search_firm(keyword_to_search)
+                        if len(temp_firms_tickers) == 1:
+                            break
+                    else:
+                        print('검색 결과 중 하나의 기업명을 입력해 주세요.')
+                print(f'{stock.get_market_ticker_name(temp_firms_tickers[0])}의 주가정보를 조회합니다.')
+                while True:
+                    date_input = input('조회하려는 기간의 날수(일 단위)를 입력하세요(ex: 30): ')
+                    if date_input.isdigit():
+                        before_date = int(date_input)
+                        break
+                    else:
+                        print('잘못된 입력입니다. 다시 입력해 주세요.')
+                return temp_firms_tickers[0], super()._get_firm_ohlcv(temp_firms_tickers[0], before_date)  # 기업 티커, 주식정보 데이터프레임을 묶은 튜플
+            else:
+                print('검색 결과가 없습니다. 다시 입력해 주세요.')
+
+    def __show_stock_graph(self):
+        super()._draw_ohlcv(self.ticker, self.ohlcv_data)
+        start_date = str(self.ohlcv_data.index.tolist()[0]).replace('-', '')[2:8]
+        end_date = str(self.ohlcv_data.index.tolist()[-1]).replace('-', '')[2:8]
+        print(f'{stock.get_market_ticker_name(self.ticker)}의 {start_date}~{end_date}간 주가 정보가 표시되었습니다.')
+
+    def __show_fundamental(self):
+        print(f'{stock.get_market_ticker_name(self.ticker)}의 최근 영업일자 DIV/BPS/PER/EPS/PBR 조회정보는 아래와 같습니다.')
+        print(super()._get_ticker_fundamental(self.ticker, str(self.ohlcv_data.index.tolist()[-1])))
+
+
+StockRecommender()
