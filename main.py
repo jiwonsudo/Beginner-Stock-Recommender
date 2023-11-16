@@ -66,13 +66,14 @@ class StockInfo:
         target_firm_ohlcv: pd.DataFrame = stock.get_market_ohlcv(start_date, today_date, target_firm_ticker)
         return target_firm_ohlcv
 
-    def _get_ticker_fundamental(self, target_firm_ticker, date):
+    def _get_ticker_fundamental(self, target_firm_ticker : str, date_to_search : str):
         """
         특정 종목의 티커를 이용, 특정 종목에 대해 조회 당일의 DIV/BPS/PER/EPS/PBR를 조회, 해당 정보가 담긴 데이터프레임을 반환합니다.
         :param target_firm_ticker: fundamental을 조회할 기업의 티커
+        :param date_to_search: 주가지표를 조회할 날짜
         :return: 입력된 티커에 대해 조회한 DIV/BPS/PER/EPS/PBR 데이터가 담긴 데이터프레임
         """
-        target_firm_fundamental: pd.DataFrame = stock.get_market_fundamental(date, date, target_firm_ticker)
+        target_firm_fundamental: pd.DataFrame = stock.get_market_fundamental(date_to_search, date_to_search, target_firm_ticker)
         return target_firm_fundamental
 
 
@@ -130,7 +131,7 @@ class DataVisualizer:
 class StockInfoViewer(StockInfo, DataVisualizer):
     def __init__(self):
         super().__init__()
-        self.ticker, self.ohlcv_data = self.__get_user_input()
+        self.__ticker, self.__ohlcv_data = self.__get_user_input()
         self.__show_stock_graph()
         self.__show_fundamental()
 
@@ -181,14 +182,14 @@ class StockInfoViewer(StockInfo, DataVisualizer):
                 print('검색 결과가 없습니다. 다시 입력해 주세요.')
 
     def __show_stock_graph(self):
-        super()._draw_ohlcv(self.ticker, self.ohlcv_data)
-        start_date = str(self.ohlcv_data.index.tolist()[0]).replace('-', '')[2:8]
-        end_date = str(self.ohlcv_data.index.tolist()[-1]).replace('-', '')[2:8]
-        print(f'{stock.get_market_ticker_name(self.ticker)}의 {start_date}~{end_date}간 주가 정보가 표시되었습니다.')
+        super()._draw_ohlcv(self.__ticker, self.__ohlcv_data)
+        start_date = str(self.__ohlcv_data.index.tolist()[0]).replace('-', '')[2:8]
+        end_date = str(self.__ohlcv_data.index.tolist()[-1]).replace('-', '')[2:8]
+        print(f'{stock.get_market_ticker_name(self.__ticker)}의 {start_date}~{end_date}간 주가 정보가 표시되었습니다.')
 
     def __show_fundamental(self):
-        print(f'{stock.get_market_ticker_name(self.ticker)}의 최근 영업일자 BPS/PER/PBR/EPS/DIV/DPS 조회정보는 아래와 같습니다.')
-        print(super()._get_ticker_fundamental(self.ticker, str(self.ohlcv_data.index.tolist()[-1])))
+        print(f'{stock.get_market_ticker_name(self.__ticker)}의 최근 영업일자 BPS/PER/PBR/EPS/DIV/DPS 조회정보는 아래와 같습니다.')
+        print(super()._get_ticker_fundamental(self.__ticker, str(self.__ohlcv_data.index.tolist()[-1])))
 
 
 StockInfoViewer()
