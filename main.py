@@ -127,7 +127,7 @@ class DataVisualizer:
         plt.show()
 
 
-class StockRecommender(StockInfo, DataVisualizer):
+class StockInfoViewer(StockInfo, DataVisualizer):
     def __init__(self):
         super().__init__()
         self.ticker, self.ohlcv_data = self.__get_user_input()
@@ -191,4 +191,4 @@ class StockRecommender(StockInfo, DataVisualizer):
         print(super()._get_ticker_fundamental(self.ticker, str(self.ohlcv_data.index.tolist()[-1])))
 
 
-StockRecommender()
+StockInfoViewer()
